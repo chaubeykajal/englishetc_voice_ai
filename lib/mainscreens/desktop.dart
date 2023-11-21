@@ -1,7 +1,7 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:js_util';
+// import 'dart:js_util';
 import 'package:englishetc_voice_ai/api_function/model.dart';
 import 'package:englishetc_voice_ai/components/Article.dart';
 import 'package:englishetc_voice_ai/components/Focus.dart';
@@ -323,7 +323,7 @@ Future<void> fetchData() async {
                         // Article in Focus mode
                         const SizedBox(width:0),
                         InkWell(onTap:(){
-                          // Navigator.push(context, MaterialPageRoute(builder: ((context) => f_DesktopPage(article_name_in: article_name_in, selected_index: selected_index, article_content: article_content, selected_index2: selected_index2, textsize: textsize))));
+                          Navigator.push(context, MaterialPageRoute(builder: ((context) => f_DesktopPage(article_name_in: article_name_in, selected_index: selected_index, article_content: article_content, selected_index2: selected_index2, textsize: textsize))));
                           },
                         child:Focas_container(focustext:"Enter to focus Mode",fontsize:17,))
                         //  height:mq.height* 0.090,width:mq.width* 0.17
@@ -451,32 +451,15 @@ Future<void> fetchData() async {
                     
                     SizedBox(height:30),
                     // Article content
-
-                    // Wrap the part that displays the article content with StreamBuilder
-                      // StreamBuilder(
-                      //   stream: _uiChangeStreamController.stream,
-                      //   builder: (context, snapshot) {
-                      //     // Check if an event is received
-                      //     if (snapshot.hasData) {
-                      //       // Stop the AI when an event is received
-                      //       stopSpeaking();
-                      //     }
-
-                          // Return the UI for displaying the article content
-                          // return 
                           Padding(
                             padding: const EdgeInsets.all(10.0),
                             child: Container(
                               child: (() {
                                 if (selected_index == 1) {
-                                
-                                    Paragraph = article_content[article_name_in].level1;
-                                    List<String> words = Paragraph.split(' ');
-                                    
-                                  return RichText(text:buildTextSpan(words));
-                                  
-                                  
-                                  // return textwidget(article_content[article_name_in].level1, textsize, FontWeight.w200, Colors.black);
+                                 Paragraph = article_content[article_name_in].level1;
+                                 List<String> words = Paragraph.split(' ');
+                                 return RichText(text:buildTextSpan(words));
+                                 // return textwidget(article_content[article_name_in].level1, textsize, FontWeight.w200, Colors.black);
                                 } else if (selected_index == 2) {
                                    
                                     Paragraph = article_content[article_name_in].level2;

@@ -3,7 +3,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 import 'package:englishetc_voice_ai/api_function/model.dart';
+import 'package:englishetc_voice_ai/mainscreens/progress.dart';
 import 'package:englishetc_voice_ai/ttsexample.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -32,16 +34,17 @@ class MobilePage extends StatefulWidget {
 
 class _MobilePageState extends State<MobilePage> {
   double textsize=17;
-
   int selected_index=3;
   int selected_index2=1;
   int article_name_in=0;
   var Paragraph='';
   StreamController _uiChangeStreamController=StreamController();
   final stt.SpeechToText _speech=stt.SpeechToText();
-
   bool _isListening=false;
   String _text="";
+  List<String> heyspeak=[];
+  List<String> notAvailable = [];
+  List<String> Available = [];
   
 
   @override
@@ -73,7 +76,7 @@ Future<void> _startListening() async {
         onResult: (result) {
           setState(() {
             _text = result.recognizedWords.toLowerCase(); // Convert to lowercase for case-insensitive matching
-            print(_text);
+            heyspeak = _text.split(' ');
 
             // Check recognized voice command and change the level
 
@@ -122,24 +125,50 @@ Future<void> _startListening() async {
               setState(() {
                 article_name_in = 3;
               });
-            }
-            // }else if (!availablecontent.contains(_text)){
-            //   ScaffoldMessenger.of(context).showSnackBar(
-            //     SnackBar(
-            //       content: Text('invalid content'),
-            //
-            //     ),
-            //   );
-            // }
+            }else if (_text.contains("change textsize")) {
+              print("yes");
+              if (selected_index == 1) {
+                print("No");
+                setState(() {
+                  selected_index2=2;
+                  textsize=22;
 
-          });
-        },
+                });
+              } else if (selected_index == 2) {
+                print("3");
+                setState(() {
+                  selected_index2=3;
+                  textsize=25;
+                });
+              } else if (selected_index == 3){
+                print("4");
+                setState(() {
+                  selected_index2=1;
+                  textsize=22;
+                });
+              }
+              // }else if (!availablecontent.contains(_text)){
+              //   ScaffoldMessenger.of(context).showSnackBar(
+              //     SnackBar(
+              //       content: Text('invalid content'),
+              //
+              //     ),
+              //   );
+              // }
+
+
+              }
+            }
+            );
+          },
       );
     }
+
   }
 }
 
-Future<void> _stopListening() async {
+
+          Future<void> _stopListening() async {
     if (_isListening) {
       setState(() {
         _isListening = false;
@@ -163,6 +192,41 @@ Future<void> _stopListening() async {
   Future<void> stopSpeaking() async {
     await flutterTts.stop(); // Stop TTS
   }
+
+  /////////////////////////////////////////////////////////////////////////////
+  ///
+  ///PONOUNCTICIATE  WORDS FUNCTION
+
+
+
+  TextSpan buildTextSpan(List<String> words) {
+    List<InlineSpan> spans = [];
+    for (String word in words) {
+      spans.add(
+        TextSpan(
+          text: word + ' ', // Include a space to separate words
+          style: TextStyle(
+            // decoration: TextDecoration.underline,
+            color: Colors.black,
+            fontSize:textsize,
+          ),
+          recognizer: TapGestureRecognizer()
+            ..onTap = () {
+              pronounceWord(word);
+            },
+        ),
+      );
+    }
+    // return TextSpan();
+    return TextSpan(children: spans);
+  }
+
+  Future<void> pronounceWord(String word) async {
+    await flutterTts.speak(word);}
+
+
+
+  /////////////////////////////////////////////////////////////////////////////
    
 
 List<Article_Model> article_content=[];
@@ -335,6 +399,39 @@ Future<void> fetchData() async {
                       ElevatedButton(onPressed: (){_stopListening();}, child:const Icon(Icons.stop)),
                     ],
                   ),
+                          SizedBox(height:25),
+
+                  Row(
+                      children: [
+                        ElevatedButton(onPressed: (){_startListening();}, child:textwidget("start", 10, FontWeight.bold, Color.fromARGB(255, 25, 104, 82))),
+                        SizedBox(width:15),
+                        ElevatedButton(onPressed: (){
+                          _stopListening();
+                          int score = 0;// Iterate through heyspeak and perform the checks
+                          final cleanedWord = Paragraph.replaceAll(RegExp(r'[^\w\s]'), '').trim().split(" ");
+                          for (String word in heyspeak) {
+                            if (Paragraph.contains(word)) {
+                              Available.add(word);
+                              score++; // Increment the score if the word is found in the paragraph
+                            } else {
+                              notAvailable.add(word); // Add the word to notAvailable if it's not found
+                            }
+                          }// Print the results
+                          print("Words not available in paragraph: $notAvailable");
+                          // print("Words available in paragraph: $Available");
+                          int ParagraphLength= cleanedWord.length;
+                          print("Your Score: $score/ $ParagraphLength");
+                          // print(Paragraph.length);
+                          showAlertDialog(context,score, notAvailable,ParagraphLength );
+                        },
+
+                            child:textwidget("finish", 10, FontWeight.bold, Color.fromARGB(255, 25, 104, 82))
+                        ),
+
+                       ],
+                      ),
+
+
                           
                           //ARTICLE CONTENT
 
@@ -344,29 +441,34 @@ Future<void> fetchData() async {
                             child: Container(
                               child:((){
                               if (selected_index==1){
-                                Paragraph=article_content[article_name_in].level1;
-                            
-                                return  textwidget(article_content[article_name_in].level1,textsize, FontWeight.w200, Colors.black,);
+                                Paragraph = article_content[article_name_in].level1;
+                                List<String> words = Paragraph.split(' ');
+                                return RichText(text:buildTextSpan(words));
+                                // return  textwidget(article_content[article_name_in].level1,textsize, FontWeight.w200, Colors.black,);
                                 }
                               else if (selected_index==2){
                                 Paragraph=article_content[article_name_in].level2;
-                                
-                                return textwidget(article_content[article_name_in].level2,textsize, FontWeight.w200, Colors.black,);
+                                List<String> words = Paragraph.split(' ');
+                                return RichText(text:buildTextSpan(words));
+                                // return textwidget(article_content[article_name_in].level2,textsize, FontWeight.w200, Colors.black,);
                               }
                               else if (selected_index==3){
                                 Paragraph=article_content[article_name_in].level3;
-                                
-                                return textwidget(article_content[article_name_in].level3,textsize, FontWeight.w200, Colors.black,);
+                                List<String> words = Paragraph.split(' ');
+                                return RichText(text:buildTextSpan(words));
+                                // return textwidget(article_content[article_name_in].level3,textsize, FontWeight.w200, Colors.black,);
                               }
                               else if (selected_index==4){
                                 Paragraph=article_content[article_name_in].level4;
-                               
-                                return textwidget(article_content[article_name_in].level4,textsize, FontWeight.w200, Colors.black,);
+                                List<String> words = Paragraph.split(' ');
+                                return RichText(text:buildTextSpan(words));
+                                // return textwidget(article_content[article_name_in].level4,textsize, FontWeight.w200, Colors.black,);
                              }
                              else{
                               Paragraph=article_content[article_name_in].level5;
-                              
-                              return textwidget(article_content[article_name_in].level5,textsize, FontWeight.w200, Colors.black,);
+                              List<String> words = Paragraph.split(' ');
+                              return RichText(text:buildTextSpan(words));
+                              // return textwidget(article_content[article_name_in].level5,textsize, FontWeight.w200, Colors.black,);
                              }
                              
                              })()
